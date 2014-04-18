@@ -11,17 +11,21 @@ namespace wunderNET
     public class wunderNETClient
     {
         private const string ApiBaseUrl = "https://api.wunderlist.com/";
-        private RestClient restClient;
+        private const string CommentsBaseUrl = "https://comments.wunderlist.com/";
+        private RestClient restClientApi;
+        private RestClient restClientComments;
         private UserLogin userLogin;
 
         public wunderNETClient()
         {
-            restClient = new RestClient(ApiBaseUrl);
+            restClientApi = new RestClient(ApiBaseUrl);
+            restClientComments = new RestClient(CommentsBaseUrl);
         }
 
         public wunderNETClient(string userName, string password)
         {
-            restClient = new RestClient(ApiBaseUrl);
+            restClientApi = new RestClient(ApiBaseUrl);
+            restClientComments = new RestClient(CommentsBaseUrl);
             GetAccessToken(userName, password);
         }
 
@@ -31,7 +35,7 @@ namespace wunderNET
             request.AddParameter("email", userName);
             request.AddParameter("password", password);
 
-            var response = restClient.Execute<AccountInfo>(request);
+            var response = restClientApi.Execute<AccountInfo>(request);
 
             userLogin = new UserLogin();
 
@@ -48,7 +52,7 @@ namespace wunderNET
             var request = new RestRequest("me/tasks", Method.GET);
             request.AddHeader("Authorization", "Bearer " + userLogin.Token);
 
-            var response = restClient.Execute<List<TaskInfo>>(request);
+            var response = restClientApi.Execute<List<TaskInfo>>(request);
 
             return response.Data;
         }
@@ -58,7 +62,31 @@ namespace wunderNET
             var request = new RestRequest("me/lists", Method.GET);
             request.AddHeader("Authorization", "Bearer " + userLogin.Token);
 
-            var response = restClient.Execute<List<ListInfo>>(request);
+            var response = restClientApi.Execute<List<ListInfo>>(request);
+
+            return response.Data;
+        }
+
+        public List<CommentInfo> GetComments(TaskInfo task)
+        {
+            var request = new RestRequest("tasks/{taskid}/messages", Method.GET);
+            request.AddHeader("Authorization", "Bearer " + userLogin.Token);
+            request.AddUrlSegment("taskid", task.ID);
+
+            var response = restClientComments.Execute<List<CommentInfo>>(request);
+
+            return response.Data;
+        }
+
+        public CommentInfo AddComment(TaskInfo task, string comment)
+        {
+            var request = new RestRequest("tasks/{taskid}/messages", Method.POST);
+            request.AddHeader("Authorization", "Bearer " + userLogin.Token);
+            request.AddParameter("channel_id", task.ID);
+            request.AddParameter("channel_type", "tasks");
+            request.AddParameter("text", comment);
+
+            var response = restClientComments.Execute<CommentInfo>(request);
 
             return response.Data;
         }
@@ -72,7 +100,7 @@ namespace wunderNET
             request.AddParameter("due_date", task.DueDate);
             request.AddParameter("recurrence_count", 0);
 
-            var response = restClient.Execute<TaskInfo>(request);
+            var response = restClientApi.Execute<TaskInfo>(request);
 
             return response.Data;
         }
@@ -83,7 +111,7 @@ namespace wunderNET
             request.AddHeader("Authorization", "Bearer " + userLogin.Token);
             request.AddUrlSegment("taskid", task.ID);
 
-            restClient.Execute(request);
+            restClientApi.Execute(request);
 
             return task;
         }
@@ -94,7 +122,7 @@ namespace wunderNET
             request.AddHeader("Authorization", "Bearer " + userLogin.Token);
             request.AddUrlSegment("listid", list.ID);
 
-            restClient.Execute(request);
+            restClientApi.Execute(request);
 
             return list;
         }

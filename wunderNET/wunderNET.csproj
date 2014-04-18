@@ -43,6 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\AccountInfo.cs" />
+    <Compile Include="Models\AuthorInfo.cs" />
+    <Compile Include="Models\CommentInfo.cs" />
     <Compile Include="Models\ListInfo.cs" />
     <Compile Include="Models\SettingsInfo.cs" />
     <Compile Include="Models\TaskInfo.cs" />
